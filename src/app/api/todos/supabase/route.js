@@ -11,25 +11,37 @@ export async function GET() {
   if (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
+
   return NextResponse.json({ success: true, data });
 }
 
 // POST: add new todo
-export async function POST(req) {
-  const body = await req.json();
+export async function POST(request) {
+  try {
+    const body = await request.json();
 
-  const { data, error } = await supabase
-    .from('todos')
-    .insert([{ title: body.title, is_completed: false }]);
+    const { data, error } = await supabase
+      .from('todos')
+      .insert([
+        {
+          title: body.title,
+          is_completed: false
+        }
+      ])
+      .select(); // 👈 important
 
-  if (error) {
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, data }, { status: 201 });
+
+  } catch (error) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
-
-  return Response.json({ success: true, data });
 }
 
-// PUT: update todo
+// DELETE: remove todo
 export async function DELETE(req) {
   const { id } = await req.json();
 
@@ -39,13 +51,13 @@ export async function DELETE(req) {
     .eq('id', id);
 
   if (error) {
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 
-  return Response.json({ success: true });
+  return NextResponse.json({ success: true });
 }
 
-// DELETE: remove todo
+// PUT: update todo (toggle checkbox)
 export async function PUT(req) {
   const { id, is_completed } = await req.json();
 
@@ -55,8 +67,8 @@ export async function PUT(req) {
     .eq('id', id);
 
   if (error) {
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 
-  return Response.json({ success: true });
+  return NextResponse.json({ success: true });
 }
